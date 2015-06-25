@@ -2,7 +2,6 @@ var fs = require('fs'),
     os = require('os'),
     util = require('util'),
     path = require('path'),
-    mmap = require('mmap'),
     Promise = require('promise'),
     request = require('request'),
     yauzl = require('yauzl'),
@@ -41,7 +40,10 @@ function Hgt(path, swLatLng, options) {
             throw new Error('Unknown tile format (1 arcsecond and 3 arcsecond supported).');
         }
 
-        this._buffer = mmap(stat.size, mmap.PROT_READ, mmap.MAP_SHARED, fd);
+        // this._buffer = mmap(stat.size, mmap.PROT_READ, mmap.MAP_SHARED, fd);
+        this._buffer = new Buffer(stat.size);
+        fs.readSync(fd, this._buffer, 0, stat.size, 0);
+
         this._swLatLng = _latLng(swLatLng);
         this._fd = fd;
 
@@ -91,7 +93,6 @@ Hgt.bilinear = function(row, col) {
 };
 
 Hgt.prototype.destroy = function() {
-    this._buffer.unmap();
     fs.closeSync(this._fd);
     delete this._buffer;
 };
